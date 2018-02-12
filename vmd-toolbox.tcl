@@ -169,7 +169,7 @@ proc ::Toolbox::toolbox {args} {
         wcom {
             if {[llength $newargs] < 1} {
                 set tresh 0.0
-                vmdconf -info "Zero or no treshold given. It will be 0.0"
+                vmdcon -info "Zero or no treshold given. It will be 0.0"
                 set retval [wcom $sel $tresh]
             } else {
                 set retval [wcom $sel [lindex $newargs 0]]
