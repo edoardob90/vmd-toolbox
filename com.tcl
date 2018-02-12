@@ -1,11 +1,12 @@
 # COM and weighted come of a sel of molecules
 # This is part of VMD-Toolbox
 #
-proc ::Toolbox::center_of_mass {sel} {
-    if { $sel == "all" } {
-        puts "COM will be calculated for all particles of top molecule"
-        set sel [atomselect top all]
-    }
+proc ::Toolbox::com {sel} {
+    ## $sel should be already set by the caller!
+    #if { $sel == "all" } {
+    #    puts "COM will be calculated for all particles of top molecule"
+    #    set sel [atomselect top all]
+    #}
     # set the center of mass to 0
     set com [veczero]
     # set the total mass to 0
@@ -29,13 +30,12 @@ proc ::Toolbox::center_of_mass {sel} {
 }
 
 # for the following to work, the weights must be loaded as the beta parameter (for example, with proc beta_load)
-proc ::Toolbox::weighted_com {args} {
-    lassign $args tresh sel
-    if { $tresh == {} } { puts "Treshold empty == 0.0" ; set tresh 0.0 } else { puts "Treshold on weight: $tresh"}
-    if { $sel == {} || $sel == "all" } {
-        vmdcon -info "Weighted COM will be calculated for all particles of top molecule"
-        set sel [atomselect top all]
-    }
+proc ::Toolbox::wcom {sel tresh} {
+    #if { $tresh == {} } { vmdcon -info "Treshold empty == 0.0" ; set tresh 0.0 } else { vmdcon -info "Treshold on weight: $tresh"}
+    #if { $sel == {} || $sel == "all" } {
+    #    vmdcon -info "Weighted COM will be calculated for all particles of top molecule"
+    #    set sel [atomselect top all]
+    #}
     set com [veczero]
     set mass 0
     # the beta factor
