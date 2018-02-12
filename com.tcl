@@ -23,10 +23,11 @@ proc ::Toolbox::com {sel} {
     }
     # and scale by the inverse of the number of atoms
     if {$mass == 0} {
-            error "center_of_mass: total mass is zero"
+            vmdcon -err "Total mass is zero! Masses and/or atom type are loaded correctly?"
+            return
+    } else {
+        return [vecscale [expr 1.0/$mass] $com]
     }
-    # The "1.0" can't be "1", since otherwise integer division is done
-    return [vecscale [expr 1.0/$mass] $com]
 }
 
 # for the following to work, the weights must be loaded as the beta parameter (for example, with proc beta_load)
@@ -45,6 +46,10 @@ proc ::Toolbox::wcom {sel tresh} {
         set com [vecadd $com [vecscale $m $coord]]
     }
     }
-    if { $mass == 0 } { vmdcon -err "Sum of weights is zero! Have you loaded the beta parameter?" }
+    if { $mass == 0 } { 
+        vmdcon -err "Sum of weights is zero! Have you loaded the beta parameter?"
+        return
+    } else {
     return [vecscale [expr 1.0/$mass] $com]
+}
 }
