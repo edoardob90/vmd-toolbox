@@ -3,7 +3,7 @@
 # This is a work in progress
 #
 # Huge thank goes to Axel Kohlmeyer <akohlmey@gmail.com>
-# for his work with TopoTools who inspired this set of scripts
+# for his work with TopoTools which inspired this set of scripts
 #
 # Author: Edoardo Baldi
 #
@@ -30,12 +30,15 @@ proc ::Toolbox::usage {} {
     vmdcon -info "  -sel       <selection>  atom selection function or text (default: 'all')"
     vmdcon -info ""
     vmdcon -info "commands available:"
-    vmdcon -info "      com                 compute the center of mass of selection"
-    vmdcon -info "      wcom                compute the weighted center of mass"
-    vmdcon -info "      loadvarpbc          load PBC from comment line of trajectory (only for XYZ files)"
-    vmdcon -info "      getcompositions     <{range}> \[<com|wcom>\]"
+    vmdcon -info "      com                     compute the center of mass of selection"
+    vmdcon -info "      wcom                    compute the weighted center of mass"
+    vmdcon -info "      loadvarpbc              load PBC from comment line of trajectory (only for XYZ files)"
+    vmdcon -info "      betaload \[<field>\]    load the value of the extra field (default 4th) as beta parameter"
+    vmdcon -info "      getcompositions <{range}> \[<com|wcom>\]"
     vmdcon -info "          estimate the composition of the elements in the region specified by the range list"
     vmdcon -info "          with option 'com' the origin will be the normal COM; with 'wcom' a weighted COM will be used"
+    vmdcon -info "      moveby  <offset>"
+    vmdcon -info "          rigid shift of the current selection by the OFFSET vector"
     return
 }
 
@@ -107,40 +110,15 @@ proc ::Toolbox::toolbox {args} {
     }
 
     # list of valid subcommands
-    set validcmd {com wcom loadvarpbc getcompositions help}
+    set validcmd {com wcom loadvarpbc getcompositions moveby help}
     if {[lsearch -exact $validcmd $cmd] < 0} {
         vmdcon -err "Unknown subcommand '$cmd'"
-        #usage
+        usage
         return
     }
 
-    # handle those subcommands that require additional arguments
-    # getcompositions requires: RANGE COM|WCOM
-    if {[string equal $cmd getcompositions]} {
-        set style com
-        if {[llength $newargs] < 1} {
-            vmdcon -err "'toolbox getcompositions' requires a RANGE argument"
-            # usage
-            return
-        }
-        if {[llength [lindex $newargs 0]] < 3} {
-            vmdcon -err "RANGE argument must be a list of 3 numbers"
-            return
-        } else {
-            set range [lindex $newargs 1]
-        }
-        if {[llength $newargs] > 1} {
-            set style [lindex $newargs 1]
-            if { ![string equal $style wcom] } {
-                vmdcon -err "Switch of 'toolbox getcompositions can be COM (default) or WCOM"
-                # usage
-                return
-            }
-        }
-        set retval [getcompositions $range $style]
-    }
 
-    # check that molid and sel a properly set
+    # check that molid and sel are properly set
     if { ![string equal $cmd help] } {
         if {($selmol >= 0) && ($selmol != $molid)} {
             vmdcon -err "Molid from selection '$selmol' does not match -molid argument '$molid'"
@@ -176,6 +154,60 @@ proc ::Toolbox::toolbox {args} {
             }
         }
 
+        loadvarpbc {
+            set retval [loadvarpbc $molid]
+        }
+
+        betaload {
+            # check if XYZ file
+            if {[molinfo $molid get filetype] != "xyz"} { vmdcon -err "Selected mol. $molid is not an XYZ file" }
+            # TODO: update beta on frame change: I don't actually now if the old way works
+            # array declaration here for scoping
+            array set xprop {}
+            array set xnfr {}
+            array set xnat {}
+            if {[llength $newargs] < 1} {
+                set field 4
+                set retval [beta_load $molid $sel $field]
+            } else {
+                set retval [beta_load $molid $sel [lindex $newargs 0]]
+            }
+        }
+
+        moveby {
+            if {[llength $newargs] < 1} { 
+                vmdcon -err "Command 'moveby' requires an OFFSET vector"
+            } else {
+                set retval [moveby $sel [lindex $newargs 0]]
+            }
+        }
+
+        getcompositions {
+            set style com
+            if {[llength $newargs] < 1} {
+                vmdcon -err "'toolbox getcompositions' requires a RANGE argument"
+                usage
+                return
+            }
+            if {[llength [lindex $newargs 0]] < 3} {
+                vmdcon -err "RANGE argument must be a list of 3 numbers"
+                return
+            } else {
+                set range [lindex $newargs 0]
+            }
+            if {[llength $newargs] > 1} {
+                set style [lindex $newargs 1]
+                if { ![string equal $style wcom] } {
+                    vmdcon -err "Switch of 'getcompositions' can be COM (default) or WCOM"
+                    usage
+                    return
+                }
+            }
+            #set retval [getcompositions $range $style]
+            # TODO
+            puts "TO BE IMPLEMENTED!\nDEBUG: $cmd $range $style"
+        }
+
         help -
         default {
             usage
@@ -188,12 +220,20 @@ proc ::Toolbox::toolbox {args} {
     return $retval
 }
 
-# stuff already written in separate files
-#   - load_pbc_xyz (renamed)
-#   - COM
-#   - beta_color (to be included)
+# short stuff
+proc ::Toolbox::moveby { sel offset } {
+    set newcoords {}
+    foreach coord [$sel get {x y z}] {
+      lvarpush newcoords [vecadd $coord $offset]
+    }
+    $sel set $newcoords
+    return
+}
+
+# load actual commands' scripts
 source "~/scripts/vmd/load_pbc_xyz.tcl"
 source "~/scripts/vmd/com.tcl"
+source "~/scripts/vmd/beta_color.tcl"
 
 # alias
 interp alias {} toolbox {} ::Toolbox::toolbox

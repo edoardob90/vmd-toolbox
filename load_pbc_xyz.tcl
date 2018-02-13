@@ -1,13 +1,12 @@
+#!/usr/bin/tclsh
 # Script to load PBC cell size from an XYZ trajectory
 # Currectly VMD ignores the 2nd header line in a XYZ trajectory
 # This script is part of VMD-Toolbox
 #
 # Author: Edoardo Baldi
 #
-proc ::Toolbox::load_pbc_xyz {args} {
-    lassign $args molid
-    if { $molid == {} } { set molid [molinfo top] }
-    if { [molinfo $molid get filetype] != "xyz" } { vmdcon -err "selected molecule is not XYZ" }
+proc ::Toolbox::loadvarpbc {molid} {
+    if { [molinfo $molid get filetype] != "xyz" } { vmdcon -err "Selected molecule is not XYZ" }
     set fname [molinfo $molid get filename]
     set nframes [molinfo $molid get numframes]
     set nat [molinfo $molid get numatoms]
@@ -26,9 +25,11 @@ proc ::Toolbox::load_pbc_xyz {args} {
         animate goto $iframe
         pbc set [format "{%s}" $pbcstring] -molid $molid
         pbc wrap -molid $molid
+        # TODO: maybe next step is a bit "stupid" and for big trajectories expensive
         # skip lines until next frame
         for { set at 0 } {$at<$nat} {incr at} { gets $myfile }
     }
     pbc box -color yellow
     close $myfile
+    return
 }
