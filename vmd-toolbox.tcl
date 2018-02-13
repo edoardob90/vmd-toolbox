@@ -110,7 +110,7 @@ proc ::Toolbox::toolbox {args} {
     }
 
     # list of valid subcommands
-    set validcmd {com wcom loadvarpbc getcompositions moveby help}
+    set validcmd {com wcom loadvarpbc betaload getcompositions moveby help}
     if {[lsearch -exact $validcmd $cmd] < 0} {
         vmdcon -err "Unknown subcommand '$cmd'"
         usage
