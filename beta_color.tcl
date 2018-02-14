@@ -26,12 +26,15 @@ proc ::Toolbox::beta_set { molid sel } {
     return
 }
 
-#sets beta value for all molecules which have been loaded
-proc ::Toolbox::beta_set_all {molid sel} {
+# function to trace beta value upon frame change
+# TODO : this doesn't seem to work with vmd trace command
+proc ::Toolbox::beta_set_all {args} {
     global xnfr
-    set lmol [molinfo list]
-    foreach molid $lmol {
-        if { [ info exists xnfr($molid) ] > 0 } { beta_set $molid $sel }
+    global molid
+    global sel
+    if {[ info exists xnfr($molid)] > 0 } {
+        vmdcon -info "Re-setting beta for mol. $molid"
+        beta_set $molid $sel
     }
     return
 }
@@ -72,6 +75,3 @@ proc ::Toolbox::beta_load {molid sel field} {
     beta_set $molid $sel
     return
 }
-# TODO: the following is commented because I'm not sure it will work
-# automatically update beta on frame change
-#trace variable vmd_frame(0) w beta_set_all

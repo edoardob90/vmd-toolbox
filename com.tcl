@@ -53,3 +53,17 @@ proc ::Toolbox::wcom {sel tresh} {
     return [vecscale [expr 1.0/$mass] $com]
 }
 }
+
+# function to estimate composition of elements
+proc ::Toolbox::getcompositions { molid sel } {
+    # total number of atoms
+    set nat [$sel num]
+    # get types, use topotools
+    set ltypes [topo -sel $sel atomtypenames]
+    vmdcon -info "Species in selection: $ltypes"
+    foreach atyp $ltypes {
+        set seltext [concat [$sel text] "and type $atyp"]
+        puts "  $atyp %at : [expr [[atomselect $molid $seltext] num]/double($nat)]"
+    }
+    return
+}

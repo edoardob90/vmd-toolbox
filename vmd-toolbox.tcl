@@ -30,15 +30,14 @@ proc ::Toolbox::usage {} {
     vmdcon -info "  -sel       <selection>  atom selection function or text (default: 'all')"
     vmdcon -info ""
     vmdcon -info "commands available:"
-    vmdcon -info "      com                     compute the center of mass of selection"
-    vmdcon -info "      wcom                    compute the weighted center of mass"
-    vmdcon -info "      loadvarpbc              load PBC from comment line of trajectory (only for XYZ files)"
+    vmdcon -info "      com     compute the center of mass of selection"
+    vmdcon -info "      wcom    compute the weighted center of mass using beta factor as weight"
+    vmdcon -info "      loadvarpbc      load PBC from comment line of trajectory (only for XYZ)"
     vmdcon -info "      betaload \[<field>\]    load the value of the extra field (default 4th) as beta parameter"
-    vmdcon -info "      getcompositions <{range}> \[<com|wcom>\]"
-    vmdcon -info "          estimate the composition of the elements in the region specified by the range list"
+    vmdcon -info "      getcompositions \[<com|wcom>\]"
+    vmdcon -info "          estimate the composition of the elements in selection"
     vmdcon -info "          with option 'com' the origin will be the normal COM; with 'wcom' a weighted COM will be used"
-    vmdcon -info "      moveby  <offset>"
-    vmdcon -info "          rigid shift of the current selection by the OFFSET vector"
+    vmdcon -info "      moveby  <offset>    rigid shift of the current selection by the OFFSET vector"
     return
 }
 
@@ -172,6 +171,8 @@ proc ::Toolbox::toolbox {args} {
             } else {
                 set retval [beta_load $molid $sel [lindex $newargs 0]]
             }
+            # ask VMD to update the command when the frame changes
+            trace add variable vmd_frame($molid) write beta_set_all
         }
 
         moveby {
@@ -184,28 +185,16 @@ proc ::Toolbox::toolbox {args} {
 
         getcompositions {
             set style com
-            if {[llength $newargs] < 1} {
-                vmdcon -err "'toolbox getcompositions' requires a RANGE argument"
-                usage
-                return
-            }
-            if {[llength [lindex $newargs 0]] < 3} {
-                vmdcon -err "RANGE argument must be a list of 3 numbers"
-                return
-            } else {
-                set range [lindex $newargs 0]
-            }
-            if {[llength $newargs] > 1} {
-                set style [lindex $newargs 1]
-                if { ![string equal $style wcom] } {
-                    vmdcon -err "Switch of 'getcompositions' can be COM (default) or WCOM"
-                    usage
-                    return
-                }
-            }
-            #set retval [getcompositions $range $style]
-            # TODO
-            puts "TO BE IMPLEMENTED!\nDEBUG: $cmd $range $style"
+            # TODO : include selection relative to COM or WCOM
+            #if {[llength $newargs] > 1} {
+            #    set style [lindex $newargs 1]
+            #    if { ![string equal $style wcom] } {
+            #        vmdcon -err "Switch of 'getcompositions' can be COM (default) or WCOM"
+            #        usage
+            #        return
+            #    }
+            #}
+            set retval [getcompositions $molid $sel]
         }
 
         help -

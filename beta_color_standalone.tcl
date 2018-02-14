@@ -82,4 +82,4 @@ beta_set $molid
 }
 
 #automatically update beta on frame change
-trace variable vmd_frame(0) w beta_set_all
+trace add variable vmd_frame(0) write beta_set_all
