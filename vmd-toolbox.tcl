@@ -33,7 +33,7 @@ proc ::Toolbox::usage {} {
     vmdcon -info "      com     compute the center of mass of selection"
     vmdcon -info "      wcom    compute the weighted center of mass using beta factor as weight"
     vmdcon -info "      loadvarpbc      load PBC from comment line of trajectory (only for XYZ)"
-    vmdcon -info "      betaload \[<field>\]    load the value of the extra field (default 4th) as beta parameter"
+    #vmdcon -info "      betaload \[<field>\]    load the value of the extra field (default 4th) as beta parameter"
     vmdcon -info "      getcompositions \[<com|wcom>\]"
     vmdcon -info "          estimate the composition of the elements in selection"
     vmdcon -info "          with option 'com' the origin will be the normal COM; with 'wcom' a weighted COM will be used"
@@ -109,7 +109,8 @@ proc ::Toolbox::toolbox {args} {
     }
 
     # list of valid subcommands
-    set validcmd {com wcom loadvarpbc betaload getcompositions moveby help}
+    # !!! TODO: betaload removed; it doesn't work properly when asking VMD to update color every frame
+    set validcmd {com wcom loadvarpbc getcompositions moveby help}
     if {[lsearch -exact $validcmd $cmd] < 0} {
         vmdcon -err "Unknown subcommand '$cmd'"
         usage
@@ -172,7 +173,7 @@ proc ::Toolbox::toolbox {args} {
                 set retval [beta_load $molid $sel [lindex $newargs 0]]
             }
             # ask VMD to update the command when the frame changes
-            trace add variable vmd_frame($molid) write beta_set_all
+            vmdcon -warn "To update color every frame do:\n   trace add variable vmd_frame($molid) write beta_set_all"
         }
 
         moveby {
@@ -222,7 +223,9 @@ proc ::Toolbox::moveby { sel offset } {
 # load actual commands' scripts
 source "~/scripts/vmd/load_pbc_xyz.tcl"
 source "~/scripts/vmd/com.tcl"
-source "~/scripts/vmd/beta_color.tcl"
+# TODO: module beta_color doesn't work. see above.
+#source "~/scripts/vmd/beta_color.tcl"
+source "~/scripts/vmd/beta_color_standalone.tcl"
 
 # alias
 interp alias {} toolbox {} ::Toolbox::toolbox
